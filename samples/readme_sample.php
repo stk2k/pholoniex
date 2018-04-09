@@ -10,11 +10,10 @@ echo '===[ simple and fastest sample ]===', PHP_EOL;
 try{
     $client = new PholoniexClient();
     
-    $exchange_info = $client->getExchangeInfo();
+    $ticker_list = $client->getTicker();
     
-    foreach($exchange_info->symbols as $idx => $symbol){
-        echo $idx . '.' . PHP_EOL;
-        echo 'symbol:' . $symbol->symbol . PHP_EOL;
+    foreach($ticker_list as $symbol => $ticker){
+        echo "[$symbol]" . $ticker['last'] . PHP_EOL;
     }
 }
 catch(\Exception $e)

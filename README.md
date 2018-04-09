@@ -16,12 +16,11 @@ pholoniex is a PHP library which provides calling poloniex-API.
 use Pholoniex\PholoniexClient;
  
 $client = new PholoniexClient();
- 
-$exchange_info = $client->getExchangeInfo();
- 
-foreach($exchange_info->symbols as $idx => $symbol){
-    echo $idx . '.' . PHP_EOL;
-    echo 'symbol:' . $symbol->symbol . PHP_EOL;
+    
+$ticker_list = $client->getTicker();
+    
+foreach($ticker_list as $symbol => $ticker){
+    echo "[$symbol]" . $ticker['last'] . PHP_EOL;
 }
  
 ```

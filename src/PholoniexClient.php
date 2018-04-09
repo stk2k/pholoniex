@@ -228,8 +228,8 @@ class PholoniexClient implements IPholoniexClient
         // HTTP GET
         $json = $this->get(PholoniexApi::TICKER);
         // check return type
-        if (!is_object($json)){
-            throw new ServerResponseFormatException('response must be an object, but returned:' . gettype($json));
+        if (!is_array($json)){
+            throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
         }
         return $json;
     }
@@ -248,8 +248,8 @@ class PholoniexClient implements IPholoniexClient
         // HTTP GET
         $json = $this->get(PholoniexApi::VOLUME_24H);
         // check return type
-        if (!is_object($json)){
-            throw new ServerResponseFormatException('response must be an object, but returned:' . gettype($json));
+        if (!is_array($json)){
+            throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
         }
         return $json;
     }
@@ -277,8 +277,8 @@ class PholoniexClient implements IPholoniexClient
         // HTTP GET
         $json = $this->get(PholoniexApi::ORDER_BOOK, $data);
         // check return type
-        if (!is_object($json)){
-            throw new ServerResponseFormatException('response must be an object, but returned:' . gettype($json));
+        if (!is_array($json)){
+            throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
         }
         return $json;
     }
@@ -366,8 +366,8 @@ class PholoniexClient implements IPholoniexClient
         // HTTP GET
         $json = $this->get(PholoniexApi::CURRENCIES);
         // check return type
-        if (!is_object($json)){
-            throw new ServerResponseFormatException('response must be an object, but returned:' . gettype($json));
+        if (!is_array($json)){
+            throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
         }
         return $json;
     }
@@ -390,8 +390,8 @@ class PholoniexClient implements IPholoniexClient
         // HTTP GET
         $json = $this->get(PholoniexApi::LOAN_ORDERS, $data);
         // check return type
-        if (!is_object($json)){
-            throw new ServerResponseFormatException('response must be an object, but returned:' . gettype($json));
+        if (!is_array($json)){
+            throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
         }
         return $json;
     }
@@ -413,8 +413,8 @@ class PholoniexClient implements IPholoniexClient
         // HTTP GET
         $json = $this->privatePost(PholoniexApi::TRADING_API, $data);
         // check return type
-        if (!is_object($json)){
-            throw new ServerResponseFormatException('response must be an object, but returned:' . gettype($json));
+        if (!is_array($json)){
+            throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
         }
         return $json;
     }
