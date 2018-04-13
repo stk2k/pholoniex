@@ -3,6 +3,7 @@ namespace Pholoniex;
 
 use Pholoniex\Exception\ApiClientException;
 use Pholoniex\Exception\ServerResponseFormatException;
+use Pholoniex\Exception\InvalidParameterException;
 use Pholoniex\Http\CurlRequest;
 use Pholoniex\Http\HttpGetRequest;
 use Pholoniex\Http\HttpDeleteRequest;
@@ -410,7 +411,64 @@ class PholoniexClient implements IPholoniexClient
         $data = array(
             'command' => 'returnBalances',
         );
-        // HTTP GET
+        // HTTP POST
+        $json = $this->privatePost(PholoniexApi::TRADING_API, $data);
+        // check return type
+        if (!is_array($json)){
+            throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
+        }
+        return $json;
+    }
+
+    /**
+     * [trading] Places a limit order in a given market.
+     *
+     * @param string $pair
+     * @param float $rate
+     * @param float $amount
+     *
+     * @return object
+     *
+     * @throws
+     */
+    public function buy($pair, $rate, $amount)
+    {
+        $data = array(
+            'command' => 'buy',
+            'currencyPair' => strtoupper($pair),
+            'rate' => $rate,
+            'amount' => $amount,
+            'fillOrKill' => 1,
+        );
+        // HTTP POST
+        $json = $this->privatePost(PholoniexApi::TRADING_API, $data);
+        // check return type
+        if (!is_array($json)){
+            throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
+        }
+        return $json;
+    }
+
+    /**
+     * [trading] Places a limit order in a given market.
+     *
+     * @param string $pair
+     * @param float $rate
+     * @param float $amount
+     *
+     * @return object
+     *
+     * @throws
+     */
+    public function sell($pair, $rate, $amount)
+    {
+        $data = array(
+            'command' => 'sell',
+            'pair' => strtoupper($pair),
+            'rate' => $rate,
+            'amount' => $amount
+        );
+        // HTTP POST
         $json = $this->privatePost(PholoniexApi::TRADING_API, $data);
         // check return type
         if (!is_array($json)){
