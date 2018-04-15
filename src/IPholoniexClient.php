@@ -12,7 +12,7 @@ interface IPholoniexClient
     /**
      * [public] Returns the ticker for all markets
      *
-     * @return object
+     * @return array
      *
      * @throws ServerResponseFormatException
      * @throws ApiClientException
@@ -22,7 +22,7 @@ interface IPholoniexClient
     /**
      * [public] Returns the 24-hour volume for all markets, plus totals for primary currencies.
      *
-     * @return object
+     * @return array
      *
      * @throws ServerResponseFormatException
      * @throws ApiClientException
@@ -35,7 +35,7 @@ interface IPholoniexClient
      * @param string $currency_pair
      * @param int $depth
      *
-     * @return object
+     * @return array
      *
      * @throws ServerResponseFormatException
      * @throws ApiClientException
@@ -49,7 +49,7 @@ interface IPholoniexClient
      * @param int $start
      * @param int $end
      *
-     * @return object
+     * @return array
      *
      * @throws ServerResponseFormatException
      * @throws ApiClientException
@@ -64,7 +64,7 @@ interface IPholoniexClient
      * @param int $end
      * @param int $period
      *
-     * @return object
+     * @return array
      *
      * @throws ServerResponseFormatException
      * @throws ApiClientException
@@ -74,7 +74,7 @@ interface IPholoniexClient
     /**
      * [public] Returns information about currencies
      *
-     * @return object
+     * @return array
      *
      * @throws ServerResponseFormatException
      * @throws ApiClientException
@@ -86,7 +86,7 @@ interface IPholoniexClient
      *
      * @param string $currency
      *
-     * @return object
+     * @return array
      *
      * @throws ServerResponseFormatException
      * @throws ApiClientException
@@ -96,7 +96,7 @@ interface IPholoniexClient
     /**
      * [trading] Returns all of your available balances
      *
-     * @return object
+     * @return array
      *
      * @throws ServerResponseFormatException
      * @throws ApiClientException

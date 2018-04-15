@@ -3,7 +3,6 @@ namespace Pholoniex;
 
 use Pholoniex\Exception\ApiClientException;
 use Pholoniex\Exception\ServerResponseFormatException;
-use Pholoniex\Exception\InvalidParameterException;
 use Pholoniex\Http\CurlRequest;
 use Pholoniex\Http\HttpGetRequest;
 use Pholoniex\Http\HttpDeleteRequest;
@@ -219,7 +218,7 @@ class PholoniexClient implements IPholoniexClient
     /**
      * [public] Returns the ticker for all markets
      *
-     * @return object
+     * @return array
      *
      * @throws ServerResponseFormatException
      * @throws ApiClientException
@@ -239,7 +238,7 @@ class PholoniexClient implements IPholoniexClient
     /**
      * [public] Returns the 24-hour volume for all markets, plus totals for primary currencies.
      *
-     * @return object
+     * @return array
      *
      * @throws ServerResponseFormatException
      * @throws ApiClientException
@@ -261,7 +260,7 @@ class PholoniexClient implements IPholoniexClient
      * @param string $currency_pair
      * @param int $depth
      *
-     * @return object
+     * @return array
      *
      * @throws ServerResponseFormatException
      * @throws ApiClientException
@@ -291,7 +290,7 @@ class PholoniexClient implements IPholoniexClient
      * @param int $start
      * @param int $end
      *
-     * @return object
+     * @return array
      *
      * @throws ServerResponseFormatException
      * @throws ApiClientException
@@ -325,7 +324,7 @@ class PholoniexClient implements IPholoniexClient
      * @param int $end
      * @param int $period
      *
-     * @return object
+     * @return array
      *
      * @throws ServerResponseFormatException
      * @throws ApiClientException
@@ -357,7 +356,7 @@ class PholoniexClient implements IPholoniexClient
     /**
      * [public] Returns information about currencies
      *
-     * @return object
+     * @return array
      *
      * @throws ServerResponseFormatException
      * @throws ApiClientException
@@ -378,7 +377,7 @@ class PholoniexClient implements IPholoniexClient
      *
      * @param string $currency
      *
-     * @return object
+     * @return array
      *
      * @throws ServerResponseFormatException
      * @throws ApiClientException
@@ -401,7 +400,7 @@ class PholoniexClient implements IPholoniexClient
     /**
      * [trading] Returns all of your available balances
      *
-     * @return object
+     * @return array
      *
      * @throws ServerResponseFormatException
      * @throws ApiClientException
@@ -427,7 +426,7 @@ class PholoniexClient implements IPholoniexClient
      * @param float $rate
      * @param float $amount
      *
-     * @return object
+     * @return array
      *
      * @throws
      */
@@ -456,7 +455,7 @@ class PholoniexClient implements IPholoniexClient
      * @param float $rate
      * @param float $amount
      *
-     * @return object
+     * @return array
      *
      * @throws
      */
