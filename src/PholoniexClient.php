@@ -94,7 +94,7 @@ class PholoniexClient implements IPholoniexClient
     
         return $this->executeRequest($request, $return_value);
     }
-    
+
     /**
      * call web API(private) by HTTP/GET
      *
@@ -428,7 +428,8 @@ class PholoniexClient implements IPholoniexClient
      *
      * @return array
      *
-     * @throws
+     * @throws ServerResponseFormatException
+     * @throws ApiClientException
      */
     public function buy($pair, $rate, $amount)
     {
@@ -457,7 +458,8 @@ class PholoniexClient implements IPholoniexClient
      *
      * @return array
      *
-     * @throws
+     * @throws ServerResponseFormatException
+     * @throws ApiClientException
      */
     public function sell($pair, $rate, $amount)
     {
