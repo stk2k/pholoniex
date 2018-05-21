@@ -1,21 +1,35 @@
 <?php
 namespace Pholoniex;
 
-use Pholoniex\Exception\ApiClientException;
-use Pholoniex\Exception\ServerResponseFormatException;
+use NetDriver\Http\HttpRequest;
+
+use Pholoniex\Exception\PholoniexClientExceptionInterface;
 
 /**
  * Pholoniex interface
  */
-interface IPholoniexClient
+interface PholoniexClientInterface
 {
+    /**
+     * get last request
+     *
+     * @return HttpRequest
+     */
+    public function getLastRequest();
+
+    /**
+     * add net driver change listener
+     *
+     * @param NetDriverChangeListenerInterface|callable $listener
+     */
+    public function addNetDriverChangeListener($listener);
+
     /**
      * [public] Returns the ticker for all markets
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws ApiClientException
+     * @throws PholoniexClientExceptionInterface
      */
     public function getTicker();
     
@@ -24,8 +38,7 @@ interface IPholoniexClient
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws ApiClientException
+     * @throws PholoniexClientExceptionInterface
      */
     public function getVolume24h();
     
@@ -37,8 +50,7 @@ interface IPholoniexClient
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws ApiClientException
+     * @throws PholoniexClientExceptionInterface
      */
     public function getOrderBook($currency_pair = NULL, $depth = NULL);
     
@@ -51,8 +63,7 @@ interface IPholoniexClient
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws ApiClientException
+     * @throws PholoniexClientExceptionInterface
      */
     public function getTradeHistory($currency_pair, $start = NULL, $end = NULL);
     
@@ -66,8 +77,7 @@ interface IPholoniexClient
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws ApiClientException
+     * @throws PholoniexClientExceptionInterface
      */
     public function getChartData($currency_pair, $start = NULL, $end = NULL, $period = NULL);
     
@@ -76,8 +86,7 @@ interface IPholoniexClient
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws ApiClientException
+     * @throws PholoniexClientExceptionInterface
      */
     public function getCurrencies();
     
@@ -88,8 +97,7 @@ interface IPholoniexClient
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws ApiClientException
+     * @throws PholoniexClientExceptionInterface
      */
     public function getLoanOrders($currency);
     
@@ -98,8 +106,34 @@ interface IPholoniexClient
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws ApiClientException
+     * @throws PholoniexClientExceptionInterface
      */
     public function getBalances();
+
+    /**
+     * [trading] Places a limit order in a given market.
+     *
+     * @param string $pair
+     * @param float $rate
+     * @param float $amount
+     *
+     * @return array
+     *
+     * @throws PholoniexClientExceptionInterface
+     */
+    public function buy($pair, $rate, $amount);
+
+
+    /**
+     * [trading] Places a limit order in a given market.
+     *
+     * @param string $pair
+     * @param float $rate
+     * @param float $amount
+     *
+     * @return array
+     *
+     * @throws PholoniexClientExceptionInterface
+     */
+    public function sell($pair, $rate, $amount);
 }

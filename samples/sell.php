@@ -9,16 +9,22 @@ list($api_key, $api_secret) = poloniex_credentials();
 
 $client = new PholoniexClient($api_key, $api_secret);
 
+$sell_amount = 0.002;
+
 try{
 // call web API
-    $result = $client->sell('BTC_ETH', 0.05925626, 0.001);
+    $ticker = $client->getTicker();
+    $rate = isset($ticker['BTC_ETH']) ? $ticker['BTC_ETH'] : 0;
+    if ($rate){
+        $rate = $rate['last'];
+        $result = $client->sell('BTC_ETH', $rate, $sell_amount);
+        echo 'result:' . print_r($result, true) . PHP_EOL;
+    }
 
 // show request URI
     $uri = $client->getLastRequest()->getUrl();
     echo 'URI:' . PHP_EOL;
     echo ' ' . $uri . PHP_EOL;
-
-    echo 'result:' . print_r($result, true) . PHP_EOL;
 }
 catch(\Exception $e)
 {

@@ -1,29 +1,44 @@
 <?php
 namespace Pholoniex;
 
-use Pholoniex\Exception\ApiClientException;
-use Pholoniex\Exception\ServerResponseFormatException;
-use Pholoniex\Http\CurlRequest;
-use Pholoniex\Http\HttpGetRequest;
-use Pholoniex\Http\HttpDeleteRequest;
-use Pholoniex\Http\HttpPostRequest;
-use Pholoniex\Http\CurlHandle;
+use NetDriver\NetDriverInterface;
+use NetDriver\NetDriverHandleInterface;
+use NetDriver\Http\HttpRequest;
+use NetDriver\Http\HttpGetRequest;
+use NetDriver\Http\HttpPostRequest;
+use NetDriver\NetDriver\Curl\CurlNetDriver;
 
+use Pholoniex\Exception\PholoniexClientException;
+use Pholoniex\Exception\PholoniexClientExceptionInterface;
+use Pholoniex\Exception\ServerResponseFormatException;
+use Pholoniex\Exception\WebApiCallException;
 
 /**
  * Pholoniex client class
  */
-class PholoniexClient implements IPholoniexClient
+class PholoniexClient implements PholoniexClientInterface
 {
-    const DEFAULT_USERAGENT    = 'pholoniex';
-    
+    /** @var null|string  */
     private $api_key;
+
+    /** @var null|string  */
     private $api_secret;
-    private $user_agent;
-    private $curl_handle;
+
+    /** @var NetDriverHandleInterface  */
+    private $netdriver_handle;
+
+    /** @var HttpRequest  */
     private $last_request;
+
+    /** @var int  */
     private $time_offset;
-    
+
+    /** @var NetDriverInterface */
+    private $net_driver;
+
+    /** @var NetDriverChangeListenerInterface[] */
+    private $listeners;
+
     /**
      * construct
      *
@@ -33,66 +48,130 @@ class PholoniexClient implements IPholoniexClient
     public function __construct($api_key = null, $api_secret = null){
         $this->api_key = $api_key;
         $this->api_secret = $api_secret;
-        $this->user_agent = self::DEFAULT_USERAGENT;
-        $this->curl_handle = new CurlHandle();
+        $this->netdriver_handle = null;
         $this->last_request = null;
         $this->time_offset = 0;
+        $this->listeners = [];
     }
     
     /**
      * get last request
      *
-     * @return CurlRequest
+     * @return HttpRequest
      */
     public function getLastRequest()
     {
         return $this->last_request;
     }
-    
+
     /**
-     * get user agent
+     * add net driver change listener
      *
-     * @return string
+     * @param NetDriverChangeListenerInterface|callable $listener
      */
-    public function getUserAgent()
+    public function addNetDriverChangeListener($listener)
     {
-        return $this->user_agent;
+        if (is_callable($listener) || $listener instanceof NetDriverChangeListenerInterface)
+            $this->listeners[] = $listener;
     }
-    
+
+    /**
+     * set net driver
+     *
+     * @param NetDriverInterface $net_driver
+     */
+    public function setNetDriver(NetDriverInterface $net_driver)
+    {
+        $this->net_driver = $net_driver;
+
+        // callback
+        $this->fireNetDriverChangeEvent($net_driver);
+    }
+
+    /**
+     * net driver change callback
+     *
+     * @param NetDriverInterface $net_driver
+     */
+    private function fireNetDriverChangeEvent(NetDriverInterface $net_driver)
+    {
+        foreach($this->listeners as $l) {
+            if ($l instanceof NetDriverChangeListenerInterface) {
+                $l->onNetDriverChanged($net_driver);
+            }
+            else if (is_callable($l)) {
+                $l($net_driver);
+            }
+        }
+    }
+
+    /**
+     * get net friver
+     *
+     * @return CurlNetDriver|NetDriverInterface
+     */
+    public function getNetDriver()
+    {
+        if ($this->net_driver){
+            return $this->net_driver;
+        }
+        $this->net_driver = new CurlNetDriver();
+        // callback
+        $this->fireNetDriverChangeEvent($this->net_driver);
+        return $this->net_driver;
+    }
+
+    /**
+     * get net driver handle
+     *
+     * @return NetDriverHandleInterface|null
+     */
+    public function getNetDriverHandle()
+    {
+        if ($this->netdriver_handle){
+            return $this->netdriver_handle;
+        }
+        $this->netdriver_handle = $this->getNetDriver()->newHandle();
+        return $this->netdriver_handle;
+    }
+
     /**
      * make request URL
      *
      * @param string $api
+     * @param array $query_data
      *
      * @return string
      */
-    private static function getURL($api)
+    private static function getURL($api, array $query_data = null)
     {
-        return PholoniexApi::ENDPOINT . $api;
+        $url = PholoniexApi::ENDPOINT . $api;
+        if ($query_data){
+            $url .= '&' . http_build_query($query_data);
+        }
+        return $url;
     }
-    
+
     /**
      * call web API by HTTP/GET
      *
      * @param string $api
      * @param array|null $query_data
-     * @param bool $return_value
      *
      * @return mixed
      *
-     * @throws ApiClientException
+     * @throws PholoniexClientExceptionInterface
      */
-    private function get($api, $query_data = null, $return_value = true)
+    private function get($api, array $query_data = [])
     {
-        $url = self::getURL($api);
-    
         $query_data = is_array($query_data) ? array_filter($query_data, function($v){
             return $v !== null;
         }) : null;
-        
-        $request = new HttpGetRequest($this, $url, $query_data);
-    
-        return $this->executeRequest($request, $return_value);
+
+        $url = self::getURL($api, $query_data);
+        $request = new HttpGetRequest($this->getNetDriver(), $url, $query_data);
+
+        return $this->executeRequest($request);
     }
 
     /**
@@ -100,17 +179,17 @@ class PholoniexClient implements IPholoniexClient
      *
      * @param string $api
      * @param array|null $query_data
-     * @param bool $return_value
      *
      * @return mixed
      *
-     * @throws ApiClientException
+     * @throws PholoniexClientExceptionInterface
      */
-    private function privateGet($api, $query_data = null, $return_value = true)
+    /*
+    private function privateGet($api, array $query_data = [])
     {
-        $query_data = is_array($query_data) ? array_filter($query_data, function($v){
+        $query_data = array_filter($query_data, function($v){
             return $v !== null;
-        }) : null;
+        });
         
         $mt = explode(' ', microtime());
         $query_data['nonce'] = $mt[1].substr($mt[0], 2, 6);
@@ -118,33 +197,33 @@ class PholoniexClient implements IPholoniexClient
         $query = http_build_query($query_data, '', '&');
         $signature = hash_hmac('sha512', $query, $this->api_secret);
     
-        $options['http_headers'] = array(
+        $options['http-headers'] = array(
             'Key: ' . $this->api_key,
             'Sign: ' . $signature,
         );
         
-        $url = self::getURL($api);
-        $request = new HttpGetRequest($this, $url, $query_data, $options);
+        $url = self::getURL($api, $query_data);
+        $request = new HttpGetRequest($this->getNetDriver(), $url, $options);
     
-        return $this->executeRequest($request, $return_value);
+        return $this->executeRequest($request);
     }
+    */
     
     /**
      * call web API(private) by HTTP/POST
      *
      * @param string $api
      * @param array $post_data
-     * @param bool $return_value
      *
      * @return mixed
      *
-     * @throws ApiClientException
+     * @throws PholoniexClientExceptionInterface
      */
-    private function privatePost($api, $post_data = null, $return_value = true)
+    private function privatePost($api, array $post_data = [])
     {
-        $post_data = is_array($post_data) ? array_filter($post_data, function($v){
+        $post_data = array_filter($post_data, function($v){
             return $v !== null;
-        }) : null;
+        });
     
         $mt = explode(' ', microtime());
         $post_data['nonce'] = $mt[1].substr($mt[0], 2, 6);
@@ -152,15 +231,15 @@ class PholoniexClient implements IPholoniexClient
         $query = http_build_query($post_data, '', '&');
         $signature = hash_hmac('sha512', $query, $this->api_secret);
         
-        $options['http_headers'] = array(
+        $options['http-headers'] = array(
             'Key' => $this->api_key,
             'Sign' => $signature,
         );
         
-        $url = self::getURL($api);
-        $request = new HttpPostRequest($this, $url, $post_data, $options);
+        $url = self::getURL($api, $post_data);
+        $request = new HttpPostRequest($this->getNetDriver(), $url, $post_data, $options);
     
-        return $this->executeRequest($request, $return_value);
+        return $this->executeRequest($request);
     }
     
     /**
@@ -168,51 +247,61 @@ class PholoniexClient implements IPholoniexClient
      *
      * @param string $api
      * @param array|null $query_data
-     * @param bool $return_value
      *
      * @return mixed
      *
-     * @throws ApiClientException
+     * @throws PholoniexClientExceptionInterface
      */
-    private function privateDelete($api, $query_data = null, $return_value = true)
+    /*
+    private function privateDelete($api, array $query_data = [])
     {
-        $query_data = is_array($query_data) ? array_filter($query_data, function($v){
+        $query_data = array_filter($query_data, function($v){
             return $v !== null;
-        }) : null;
+        });
         
         $ts = (microtime(true)*1000) + $this->time_offset;
         $query_data['timestamp'] = number_format($ts,0,'.','');
         $query = http_build_query($query_data, '', '&');
         $signature = hash_hmac('sha256', $query, $this->api_secret);
         
-        $options['http_headers'] = array(
+        $options['http-headers'] = array(
             'X-MBX-APIKEY' => $this->api_key,
         );
         //$options['verbose'] = 1;
         
         $url = self::getURL($api) . '?' . $query . '&signature=' . $signature;
-        $request = new HttpDeleteRequest($this, $url,  $options);
+        $request = new HttpDeleteRequest($this->getNetDriver(), $url,  $options);
         
-        return $this->executeRequest($request, $return_value);
+        return $this->executeRequest($request);
     }
+    */
     
     /**
      * execute request
      *
-     * @param CurlRequest $request
-     * @param bool $return_value
+     * @param HttpRequest $request
      *
      * @return mixed
      *
-     * @throws ApiClientException
+     * @throws PholoniexClientExceptionInterface
      */
-    private function executeRequest($request, $return_value = true)
+    private function executeRequest($request)
     {
-        $json = $request->execute($this->curl_handle, $return_value);
-    
-        $this->last_request = $request;
-    
-        return $json;
+        try{
+            $response = $this->net_driver->sendRequest($this->getNetDriverHandle(), $request);
+
+            $this->last_request = $request;
+
+            $json = @json_decode($response->getBody(), true);
+            if ($json === null){
+                throw new WebApiCallException(json_last_error_msg() . '/' . $response->getBody());
+            }
+            return $json;
+        }
+        catch(\Throwable $e)
+        {
+            throw new PholoniexClientException('NetDriver#sendRequest() failed: ' . $e->getMessage(), $e);
+        }
     }
     
     /**
@@ -220,8 +309,7 @@ class PholoniexClient implements IPholoniexClient
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws ApiClientException
+     * @throws PholoniexClientExceptionInterface
      */
     public function getTicker()
     {
@@ -240,8 +328,7 @@ class PholoniexClient implements IPholoniexClient
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws ApiClientException
+     * @throws PholoniexClientExceptionInterface
      */
     public function getVolume24h()
     {
@@ -262,8 +349,7 @@ class PholoniexClient implements IPholoniexClient
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws ApiClientException
+     * @throws PholoniexClientExceptionInterface
      */
     public function getOrderBook($currency_pair = NULL, $depth = NULL)
     {
@@ -292,8 +378,7 @@ class PholoniexClient implements IPholoniexClient
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws ApiClientException
+     * @throws PholoniexClientExceptionInterface
      */
     public function getTradeHistory($currency_pair, $start = NULL, $end = NULL)
     {
@@ -326,8 +411,7 @@ class PholoniexClient implements IPholoniexClient
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws ApiClientException
+     * @throws PholoniexClientExceptionInterface
      */
     public function getChartData($currency_pair, $start = NULL, $end = NULL, $period = NULL)
     {
@@ -358,8 +442,7 @@ class PholoniexClient implements IPholoniexClient
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws ApiClientException
+     * @throws PholoniexClientExceptionInterface
      */
     public function getCurrencies()
     {
@@ -379,8 +462,7 @@ class PholoniexClient implements IPholoniexClient
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws ApiClientException
+     * @throws PholoniexClientExceptionInterface
      */
     public function getLoanOrders($currency)
     {
@@ -402,8 +484,7 @@ class PholoniexClient implements IPholoniexClient
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws ApiClientException
+     * @throws PholoniexClientExceptionInterface
      */
     public function getBalances()
     {
@@ -428,8 +509,7 @@ class PholoniexClient implements IPholoniexClient
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws ApiClientException
+     * @throws PholoniexClientExceptionInterface
      */
     public function buy($pair, $rate, $amount)
     {
@@ -458,16 +538,15 @@ class PholoniexClient implements IPholoniexClient
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws ApiClientException
+     * @throws PholoniexClientExceptionInterface
      */
     public function sell($pair, $rate, $amount)
     {
         $data = array(
             'command' => 'sell',
-            'pair' => strtoupper($pair),
+            'currencyPair' => strtoupper($pair),
             'rate' => $rate,
-            'amount' => $amount
+            'amount' => $amount,
         );
         // HTTP POST
         $json = $this->privatePost(PholoniexApi::TRADING_API, $data);

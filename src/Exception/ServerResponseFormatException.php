@@ -1,7 +1,7 @@
 <?php
 namespace Pholoniex\Exception;
 
-class ServerResponseFormatException extends \Exception
+class ServerResponseFormatException extends \Exception implements PholoniexClientExceptionInterface
 {
     /**
      * construct
