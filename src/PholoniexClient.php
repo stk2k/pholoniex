@@ -147,7 +147,8 @@ class PholoniexClient implements PholoniexClientInterface
     {
         $url = PholoniexApi::ENDPOINT . $api;
         if ($query_data){
-            $url .= '&' . http_build_query($query_data);
+            $glue = strpos($url,'?') === false ? '?' : '&';
+            $url .= $glue . http_build_query($query_data);
         }
         return $url;
     }
