@@ -73,6 +73,16 @@ class PholoniexLoggerClient implements PholoniexClientInterface, NetDriverChange
     }
 
     /**
+     * set net driver
+     *
+     * @param NetDriverInterface $net_driver
+     */
+    public function setNetDriver(NetDriverInterface $net_driver)
+    {
+        $this->client->setNetDriver($net_driver);
+    }
+
+    /**
      * [public] Returns the ticker for all markets
      *
      * @return array
