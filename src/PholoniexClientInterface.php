@@ -2,6 +2,7 @@
 namespace Pholoniex;
 
 use NetDriver\Http\HttpRequest;
+use NetDriver\NetDriverInterface;
 
 use Pholoniex\Exception\PholoniexClientExceptionInterface;
 
@@ -23,6 +24,13 @@ interface PholoniexClientInterface
      * @param NetDriverChangeListenerInterface|callable $listener
      */
     public function addNetDriverChangeListener($listener);
+
+    /**
+     * get net driver
+     *
+     * @return NetDriverInterface
+     */
+    public function getNetDriver();
 
     /**
      * [public] Returns the ticker for all markets
